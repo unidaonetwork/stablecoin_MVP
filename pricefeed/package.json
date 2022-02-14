@@ -1,0 +1,42 @@
+{
+  "name": "pricefeed",
+  "version": "1.0.0",
+  "description": "api to feed and fetch price",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@truffle/hdwallet-provider": "^1.2.3",
+    "axios": "^0.25.0",
+    "bcrypt": "^5.0.0",
+    "bip39": "^3.0.3",
+    "body-parser": "^1.19.0",
+    "buffer": "^5.7.1",
+    "circular-json": "^0.5.9",
+    "concurrently": "^5.3.0",
+    "cookie-parser": "^1.4.5",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.0.0",
+    "cryptr": "^6.0.2",
+    "dotenv": "^8.6.0",
+    "ethapi-js": "^0.4.2",
+    "ethereumjs-wallet": "^1.0.1",
+    "etherscan-api": "^10.0.5",
+    "express": "^4.17.1",
+    "fs": "^0.0.1-security",
+    "heroku": "^7.59.0",
+    "jsonwebtoken": "^8.5.1",
+    "node-cron": "^3.0.0",
+    "node-fetch": "^2.6.5",
+    "nodemon": "^2.0.7",
+    "numeral": "^2.0.6",
+    "solc": "^0.8.7-fixed",
+    "truffle-contract": "^4.0.31",
+    "web3": "^1.5.2",
+    "ws": "^5.2.2"
+  },
+  "author": "",
+  "license": "ISC"
+}

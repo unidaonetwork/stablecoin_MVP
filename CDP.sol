@@ -324,7 +324,17 @@ contract UDToken is UDTokenBase(0), UDStop {
         _balances[guy] = add(_balances[guy], wad);
         _supply = add(_supply, wad);
         Mint(guy, wad);
+
+
     }
+     function burnFrom(address guy, uint wad) public {
+        require(_approvals[guy][msg.sender]>=wad);
+        _balances[guy] = sub(_balances[guy], wad);
+        _supply = sub(_supply, wad);
+        Burn(guy, wad);
+    }
+    
+    
     function burn(address guy, uint wad) public auth stoppable {
         if (guy != msg.sender && _approvals[guy][msg.sender] != uint(-1)) {
             _approvals[guy][msg.sender] = sub(_approvals[guy][msg.sender], wad);
@@ -388,12 +398,14 @@ contract UDTubEvents {
 contract UDTub is  UDThing, UDTubEvents {
     ERC20                     public  collateralcoin;
     UDToken                   public  stablecoin;
+    UDToken                   public  governcoin;
     pricefeed                 public  pfc;
     uint256                   public  taxrate;
     uint256                   public  cupi;
     mapping (bytes32 => Cup)  public  cups;
     uint256                   public  ocr;
     address                   public  owner;
+    address                   public  pit; 
     uint256                   public  msr;
     
 
@@ -403,20 +415,24 @@ struct Cup {
         uint256  collateralE; //ink;      // Locked collateral (in ecoin)
         uint256  collateralX; //ink;      // Locked collateral (in xdc)
         uint256  tax; //art;      // Outstanding normalised debt (tax only)
-        uint256  scm;      // Stablecoin minted;
+        uint256  scm;      // Stablecoin minted in current debt;
         uint256  debt; //debt
         
     }
     function UDTub(
      
-        UDToken  cc_,
+        ERC20  cc_,
+        UDToken gov_,
         UDToken  sc_,
-        pricefeed pf_
+        pricefeed pf_,
+        address pit_
     ) public {
          owner= msg.sender;
          stablecoin=sc_;
+         governcoin = gov_;
          collateralcoin=cc_;
          pfc = pf_;
+         pit=pit_;
          ocr=500;
          msr=175;
     }
@@ -529,12 +545,14 @@ struct Cup {
         cups[cup].collateralE = add(cups[cup].collateralE, amount_);
                 
         collateralcoin.transferFrom(msg.sender, address(this), amount);
-    
         uint amountallowed= sAmountforEcoin(amount_);
         stablecoin.vaultMint(msg.sender, amountallowed);
         uint amountAdd = amountallowed/10**18;
         cups[cup].scm = add(cups[cup].scm, amountAdd);
         cups[cup].debt = add(cups[cup].debt, amountAdd);
+        uint256 taxdebt = taxcalc(cup);
+        cups[cup].tax = taxdebt;
+
 
     }
 
@@ -560,6 +578,8 @@ struct Cup {
         uint amountAdd = amountallowed/10**18;
         cups[cup].scm = add(cups[cup].scm, amountAdd);
         cups[cup].debt = add(cups[cup].debt, amountAdd);
+        uint256 taxdebt = taxcalc(cup);
+        cups[cup].tax = taxdebt;
 
 
     }
@@ -572,16 +592,40 @@ struct Cup {
         require(USDX_Amt<=cups[cup_].debt);
         uint256 amtTrans = USDX_Amt*10**18;
         uint256 amtAdd = amtTrans/10**18;
-        stablecoin.transferFrom(msg.sender, address(this), amtTrans );
+        stablecoin.burn(msg.sender, amtTrans );
         cups[cup_].debt = cups[cup_].debt - amtAdd;
+
+    }
+ 
+
+
+
+/* 
+    function to wipe debt and pay the tax
+    burn the debt amount of stablecoin from cup owner (msg.sender)
+    transfer the amount of tax in the form of governance coin and send 
+    it to the token burner
+ */
+    function wipeVault(bytes32 cup_) public {
+        require(safeCheck(cup_)==true);
+        require(cups[cup_].owner==msg.sender);
+        require(stablecoin.balanceOf(msg.sender)>=cups[cup_].debt);
+        require(governcoin.balanceOf(msg.sender)>=cups[cup_].tax);
+        uint debt = cups[cup_].debt;
+        uint tax = cups[cup_].tax;
+
+        stablecoin.burnFrom(msg.sender, debt*10**18);
+        governcoin.transferFrom(msg.sender, pit, tax*10**18);
+        cups[cup_].tax= 0;
+        cups[cup_].scm= 0;
+        cups[cup_].debt = 0;
 
     }
 
 
-
     //function to transfer back the collateral if no debt is present
 
-    function freeEcoins(bytes32 cup_) public {
+     function freeEcoins(bytes32 cup_) public {
         require(safeCheck(cup_)==true);
         require(msg.sender == cups[cup_].owner);
         require(cups[cup_].debt == 0);
@@ -596,7 +640,7 @@ struct Cup {
         require(safeCheck(cup_)==true);
         require(msg.sender == cups[cup_].owner);
         require(cups[cup_].debt == 0);
-      
+     
         uint refamt = cups[cup_].collateralX*10**18;
         msg.sender.transfer(refamt);
         cups[cup_].collateralX =0;

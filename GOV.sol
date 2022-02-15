@@ -308,6 +308,12 @@ contract UDToken is UDTokenBase(0), UDStop {
         _supply = add(_supply, wad);
         Mint(guy, wad);
     }
+     function burnFrom(address guy, uint wad) public {
+        require(_approvals[guy][msg.sender]>=wad);
+        _balances[guy] = sub(_balances[guy], wad);
+        _supply = sub(_supply, wad);
+        Burn(guy, wad);
+    }
     function burn(address guy, uint wad) public auth stoppable {
         if (guy != msg.sender && _approvals[guy][msg.sender] != uint(-1)) {
             _approvals[guy][msg.sender] = sub(_approvals[guy][msg.sender], wad);

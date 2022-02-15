@@ -383,7 +383,7 @@ contract pricefeed {
 
 
 contract UDTubEvents {
-    event LogNewCup(address indexed lad, uint256 cup);
+    event LogNewCup(address indexed lad, bytes32 cup);
 }
 contract UDTub is  UDThing, UDTubEvents {
     ERC20                     public  collateralcoin;
@@ -391,14 +391,14 @@ contract UDTub is  UDThing, UDTubEvents {
     pricefeed                 public  pfc;
     uint256                   public  taxrate;
     uint256                   public  cupi;
-    mapping (uint256 => Cup)  public  cups;
+    mapping (bytes32 => Cup)  public  cups;
     uint256                   public  ocr;
     address                   public  owner;
     uint256                   public  msr;
     
 
 struct Cup {
-        uint256  ino; //Number
+        bytes32  ino; //Number
         address  owner; //lad;      // CDP owner
         uint256  collateralE; //ink;      // Locked collateral (in ecoin)
         uint256  collateralX; //ink;      // Locked collateral (in xdc)
@@ -449,33 +449,33 @@ struct Cup {
 
 
 
-    function open() public  returns (uint256 cup) {
+    function open() public  returns (bytes32 cup) {
         require (cupNoOf(msg.sender) == 0);
         cupi = (cupi+ 1);
-        cup = uint256(cupi);
-        cups[cup].ino = cupi;
+        cup = bytes32(cupi);
+        cups[cup].ino = cup;
         cups[cup].owner = msg.sender;
         LogNewCup(msg.sender, cup);
     }
 
 
 
-    function ownerOf(uint256 cup) public view returns (address) {
+    function ownerOf(bytes32 cup) public view returns (address) {
         return cups[cup].owner;
     }
 
 
 
-     function collateralEOf(uint256 cup) public view returns (uint) {
+     function collateralEOf(bytes32 cup) public view returns (uint) {
         return cups[cup].collateralE;
     }
-     function collateralXOf(uint256 cup) public view returns (uint) {
+     function collateralXOf(bytes32 cup) public view returns (uint) {
         return cups[cup].collateralX;
     }
 
 
 
-     function taxcalc(uint256 cup) public view returns (uint) {
+     function taxcalc(bytes32 cup) public view returns (uint) {
         uint ppl =cups[cup].scm;
         uint rate = taxrate;
         uint tax = ppl*rate/100;
@@ -522,7 +522,7 @@ struct Cup {
     the function automatically adds 10 decimals to the value
      */
 
-    function depositEcoin(uint256 cup, uint amount_) public note {
+    function depositEcoin(bytes32 cup, uint amount_) public note {
         require(safeCheck(cup)==true);
         uint256 amount = amount_*10**10;
         
@@ -546,7 +546,7 @@ struct Cup {
       require input amount without decimals for now
     the function automatically adds 18 decimals to the value
      */
-    function depositXDC(uint256 cup, uint amount_) public payable note {
+    function depositXDC(bytes32 cup, uint amount_) public payable note {
         require(safeCheck(cup)==true);
         uint256 amount = amount_*10**18;
         require(msg.value==amount);
@@ -566,7 +566,7 @@ struct Cup {
 
 
     //function to deposit full or partial debt
-    function payBack(uint256 cup_, uint256 USDX_Amt ) public {
+    function payBack(bytes32 cup_, uint256 USDX_Amt ) public {
         require(safeCheck(cup_)==true);
         require(cups[cup_].owner==msg.sender);
         require(USDX_Amt<=cups[cup_].debt);
@@ -581,7 +581,7 @@ struct Cup {
 
     //function to transfer back the collateral if no debt is present
 
-    function freeEcoins(uint256 cup_) public {
+    function freeEcoins(bytes32 cup_) public {
         require(safeCheck(cup_)==true);
         require(msg.sender == cups[cup_].owner);
         require(cups[cup_].debt == 0);
@@ -592,7 +592,7 @@ struct Cup {
 
     //function to transfer back the collateral if no debt is present
 
-    function freeXDC(uint256 cup_) public {
+    function freeXDC(bytes32 cup_) public {
         require(safeCheck(cup_)==true);
         require(msg.sender == cups[cup_].owner);
         require(cups[cup_].debt == 0);
@@ -643,7 +643,7 @@ struct Cup {
 
     //Function to check whether cup is safe or not
 
-    function safeCheck(uint cup_) public view returns(bool){
+    function safeCheck(bytes32 cup_) public view returns(bool){
         uint256 debt = cups[cup_].debt;
  
        
@@ -668,12 +668,12 @@ struct Cup {
 
 
     //returns cup number of msg.sender
-    function cupNo() public view returns(uint256) {
+    function cupNo() public view returns(bytes32) {
         uint256 qua = cupi;
         for (uint256 i = 0 ; i <= qua ; i++) {
-            address own = cups[i].owner;
+            address own = cups[bytes32(i)].owner;
             if (own==msg.sender) {
-              uint256 sno = cups[i].ino;
+              bytes32 sno = cups[bytes32(i)].ino;
                return(sno);
             }
         }
@@ -683,12 +683,12 @@ struct Cup {
 
 
     //retuns cup number of given address
-    function cupNoOf(address add) public view returns(uint256) {
+    function cupNoOf(address add) public view returns(bytes32) {
         uint256 qua = cupi;
         for (uint256 i = 0 ; i <= qua ; i++) {
-            address own = cups[i].owner;
+            address own = cups[bytes32(i)].owner;
             if (own==add) {
-              uint256 sno = cups[i].ino;
+              bytes32 sno = cups[bytes32(i)].ino;
                return(sno);
             }
         }

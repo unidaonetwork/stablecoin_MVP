@@ -1,6 +1,6 @@
 
 
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.13;
 
 
 
@@ -122,6 +122,8 @@ contract UDAuth is UDAuthEvents {
             return true;
         } else if (authority == UDAuthority(0)) {
             return false;
+        } else if (authority == src) {
+            return true;
         } else {
             return authority.canCall(src, this, sig);
         }

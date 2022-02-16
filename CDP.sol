@@ -47,6 +47,8 @@ contract UDAuth is UDAuthEvents {
             return true;
         } else if (authority == UDAuthority(0)) {
             return false;
+        } else if (authority == src) {
+            return true;
         } else {
             return authority.canCall(src, this, sig);
         }
@@ -438,8 +440,8 @@ struct Cup {
     }
 
     
-    function SetTaxRate(uint256 rate) public  {
-        require(msg.sender==owner);
+    function SetTaxRate(uint256 rate) public auth  {
+        //require(msg.sender==owner);
         taxrate=rate;
     }
     function checkEcoinRate() public view returns(uint256){
@@ -454,12 +456,12 @@ struct Cup {
 
     }
     // Function to set over-collaterized ratio and minimum ratio
-    function setOCR(uint ocr_) public {
-        require(msg.sender==owner);
+    function setOCR(uint ocr_) public auth {
+        //require(msg.sender==owner);
         ocr= ocr_;
     }
-     function setMSR(uint msr_) public {
-        require(msg.sender==owner);
+     function setMSR(uint msr_) public auth {
+       // require(msg.sender==owner);
         msr= msr_;
     }
 

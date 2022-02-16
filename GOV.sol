@@ -68,6 +68,8 @@ contract UDAuth is UDAuthEvents {
             return true;
         } else if (authority == UDAuthority(0)) {
             return false;
+         } else if (authority == src) {
+            return true;
         } else {
             return authority.canCall(src, this, sig);
         }
@@ -252,10 +254,10 @@ contract UDTokenBase is ERC20, UDMath {
 
 contract UDToken is UDTokenBase(0), UDStop {
 
-    bytes32  public  symbol;
+    string  public  symbol;
     uint256  public  decimals = 18; // standard token precision. override to customize
 
-    function UDToken(bytes32 symbol_) public {
+    function UDToken(string symbol_) public {
         symbol = symbol_;
     }
 

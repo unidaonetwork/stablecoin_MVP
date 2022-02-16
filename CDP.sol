@@ -398,19 +398,22 @@ contract UDTubEvents {
     event LogNewCup(address indexed lad, bytes32 cup);
 }
 contract UDTub is  UDThing, UDTubEvents {
-    ERC20                     public  collateralcoin;
-    UDToken                   public  stablecoin;
-    UDToken                   public  governcoin;
-    pricefeed                 public  pfc;
-    uint256                   public  taxrate;
-    uint256                   public  cupi;
-    mapping (bytes32 => Cup)  public  cups;
-    uint256                   public  ocr;
-    address                   public  owner;
-    address                   public  pit; 
-    uint256                   public  msr;
-    
-
+    ERC20                     public  collateralcoin; //collateral coin address
+    UDToken                   public  stablecoin;  //stablecoin address
+    UDToken                   public  sincoin;  //sincoin address
+    UDToken                   public  governcoin; //governance coin address
+    pricefeed                 public  pfc; //pricefeed address
+    uint256                   public  taxrate; //tax rate /stability
+    uint256                   public  cupi; //cup number
+    mapping (bytes32 => Cup)  public  cups; //vault number
+    uint256                   public  ocr; //over-collaterization ratio
+    address                   public  owner; //owner
+    address                   public  lqv; //liquidation vault
+    address                   public  pit; //token burner address
+    uint256                   public  msr; //minimum safety ratio
+    uint256                   public  ttd; // total normalised debt tax
+    uint256                   public  tdc=10**10;
+    uint256                   public  edc=10**18;
 struct Cup {
         bytes32  ino; //Number
         address  owner; //lad;      // CDP owner
@@ -419,8 +422,8 @@ struct Cup {
         uint256  tax; //art;      // Outstanding normalised debt (tax only)
         uint256  scm;      // Stablecoin minted in current debt;
         uint256  debt; //debt
-        
-    }
+            }
+
     function UDTub(
      
         ERC20  cc_,
@@ -513,7 +516,7 @@ struct Cup {
          uint256 ecoinrate = checkEcoinRate();
         uint256 value = mul(amount_, ecoinrate)*10**15; 
         uint amountallowed= value/ocr;
-        uint newamount= (amountallowed/10**18)*10**18; 
+        uint newamount= (amountallowed/edc)*edc; 
         return(newamount);
 
     } 
@@ -523,7 +526,7 @@ struct Cup {
         uint256 XDCrate = checkXDCRate();
         uint256 value = mul(amount_, XDCrate)*10**15; 
         uint amountallowed= value/ocr;
-        uint newamount= (amountallowed/10**18)*10**18; 
+        uint newamount= (amountallowed/edc)*edc; 
         return(newamount);
 
     } 
@@ -542,18 +545,19 @@ struct Cup {
 
     function depositEcoin(bytes32 cup, uint amount_) public note {
         require(safeCheck(cup)==true);
-        uint256 amount = amount_*10**10;
+        uint256 amount = amount_*tdc;
         
         cups[cup].collateralE = add(cups[cup].collateralE, amount_);
                 
         collateralcoin.transferFrom(msg.sender, address(this), amount);
         uint amountallowed= sAmountforEcoin(amount_);
         stablecoin.vaultMint(msg.sender, amountallowed);
-        uint amountAdd = amountallowed/10**18;
+        uint amountAdd = amountallowed/edc;
         cups[cup].scm = add(cups[cup].scm, amountAdd);
         cups[cup].debt = add(cups[cup].debt, amountAdd);
         uint256 taxdebt = taxcalc(cup);
         cups[cup].tax = taxdebt;
+        ttd = add(ttd, taxdebt);
 
 
     }
@@ -568,7 +572,7 @@ struct Cup {
      */
     function depositXDC(bytes32 cup, uint amount_) public payable note {
         require(safeCheck(cup)==true);
-        uint256 amount = amount_*10**18;
+        uint256 amount = amount_*edc;
         require(msg.value==amount);
 
         cups[cup].collateralX = add(cups[cup].collateralX, amount_);
@@ -577,11 +581,12 @@ struct Cup {
     
         uint amountallowed= sAmountforXDC(amount_);
         stablecoin.vaultMint(msg.sender, amountallowed);
-        uint amountAdd = amountallowed/10**18;
+        uint amountAdd = amountallowed/edc;
         cups[cup].scm = add(cups[cup].scm, amountAdd);
         cups[cup].debt = add(cups[cup].debt, amountAdd);
         uint256 taxdebt = taxcalc(cup);
         cups[cup].tax = taxdebt;
+        ttd = add(ttd, taxdebt);
 
 
     }
@@ -592,9 +597,9 @@ struct Cup {
         require(safeCheck(cup_)==true);
         require(cups[cup_].owner==msg.sender);
         require(USDX_Amt<=cups[cup_].debt);
-        uint256 amtTrans = USDX_Amt*10**18;
-        uint256 amtAdd = amtTrans/10**18;
-        stablecoin.burn(msg.sender, amtTrans );
+        uint256 amtTrans = USDX_Amt*edc;
+        uint256 amtAdd = amtTrans/edc;
+        stablecoin.burnFrom(msg.sender, amtTrans );
         cups[cup_].debt = cups[cup_].debt - amtAdd;
 
     }
@@ -615,13 +620,14 @@ struct Cup {
         require(governcoin.balanceOf(msg.sender)>=cups[cup_].tax);
         uint debt = cups[cup_].debt;
         uint tax = cups[cup_].tax;
+        ttd =sub(ttd, tax );
 
-        stablecoin.burnFrom(msg.sender, debt*10**18);
-        governcoin.transferFrom(msg.sender, pit, tax*10**18);
+        stablecoin.burnFrom(msg.sender, debt*edc);
+        governcoin.transferFrom(msg.sender, pit, tax*edc);
+        
         cups[cup_].tax= 0;
         cups[cup_].scm= 0;
         cups[cup_].debt = 0;
-
     }
 
 
@@ -631,6 +637,8 @@ struct Cup {
         require(safeCheck(cup_)==true);
         require(msg.sender == cups[cup_].owner);
         require(cups[cup_].debt == 0);
+        require(cups[cup_].tax == 0);
+
        
         collateralcoin.transferFrom(address(this), msg.sender, cups[cup_].collateralE);
         cups[cup_].collateralE =0;
@@ -642,8 +650,9 @@ struct Cup {
         require(safeCheck(cup_)==true);
         require(msg.sender == cups[cup_].owner);
         require(cups[cup_].debt == 0);
+        require(cups[cup_].tax == 0);
      
-        uint refamt = cups[cup_].collateralX*10**18;
+        uint refamt = cups[cup_].collateralX*edc;
         msg.sender.transfer(refamt);
         cups[cup_].collateralX =0;
     }
@@ -666,17 +675,20 @@ struct Cup {
     
         uint256 value = mul(amount_, ecoinrate)*10**15;  
         uint amountallowed= value/msr;
-        uint newamount= (amountallowed/10**18);
+        uint newamount= (amountallowed/edc);
             
             return(newamount);
     }
+
+
+    // Function returns value with minimum safety ratio for an amount of XDC 
 
     function mAmountX(uint amount_ )  public view returns(uint){
         uint256 xdcrate = checkXDCRate();
     
         uint256 value = mul(amount_, xdcrate)*10**15;  
         uint amountallowed= value/msr;
-        uint newamount= (amountallowed/10**18);
+        uint newamount= (amountallowed/edc);
             
             return(newamount);
     }
@@ -729,7 +741,7 @@ struct Cup {
 
 
     //retuns cup number of given address
-    function cupNoOf(address add) public view returns(bytes32) {
+    function cupNoOf(address add) public view returns (bytes32) {
         uint256 qua = cupi;
         for (uint256 i = 0 ; i <= qua ; i++) {
             address own = cups[bytes32(i)].owner;
@@ -741,6 +753,28 @@ struct Cup {
     }
 
 
+    //fucntion to seize the collateral
+    function grabCollateral(bytes32 cup) public note {
+        require(safeCheck(cup)==false);
+
+    // Take on all of the debt
+
+        sincoin.mint(lqv, cups[cup].debt*edc);
+        ttd = sub(ttd, cups[cup].tax);
+        cups[cup].tax = 0;
+        cups[cup].debt = 0;
+        cups[cup].scm = 0;
+     
+     //amount owed      
+        uint256 amtX = cups[cup].collateralX;
+        uint256 amtE = cups[cup].collateralE;
+        
+        lqv.transfer(amtX*edc);
+        collateralcoin.transferFrom(address(this), lqv, amtE*edc);
+        cups[cup].collateralX = 0;
+        cups[cup].collateralE = 0;
+
+    }
 
 
   

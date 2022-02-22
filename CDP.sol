@@ -86,6 +86,9 @@ contract UDMath {
     function sub(uint x, uint y) internal pure returns (uint z) {
         require((z = x - y) <= x);
     }
+    function div(uint x, uint y) internal pure returns (uint z) {
+        return((z = x/y));
+    }
     function mul(uint x, uint y) internal pure returns (uint z) {
         require(y == 0 || (z = x * y) / y == x);
     }
@@ -514,9 +517,9 @@ struct Cup {
     //Returns stable amount allowed for given amount of ecoin
     function sAmountforEcoin(uint256 amount_) public view returns(uint256){
          uint256 ecoinrate = checkEcoinRate();
-        uint256 value = mul(amount_, ecoinrate)*10**15; 
+        uint256 value = mul(div(amount_, tdc), ecoinrate)*10**15; 
         uint amountallowed= value/ocr;
-        uint newamount= (amountallowed/edc)*edc; 
+        uint newamount= (amountallowed); 
         return(newamount);
 
     } 
@@ -524,9 +527,9 @@ struct Cup {
     //Returns stable amount allowed for given amount of xdc
     function sAmountforXDC(uint256 amount_) public view returns(uint256){
         uint256 XDCrate = checkXDCRate();
-        uint256 value = mul(amount_, XDCrate)*10**15; 
+        uint256 value = mul(div(amount_, edc), XDCrate)*10**15; 
         uint amountallowed= value/ocr;
-        uint newamount= (amountallowed/edc)*edc; 
+        uint newamount= (amountallowed); 
         return(newamount);
 
     } 
@@ -539,20 +542,17 @@ struct Cup {
 
     /* 
      function to deposit ecoin and mint stablecoin
-    require input amount without decimals for now
-    the function automatically adds 10 decimals to the value
      */
 
     function depositEcoin(bytes32 cup, uint amount_) public note {
         require(safeCheck(cup)==true);
-        uint256 amount = amount_*tdc;
         
         cups[cup].collateralE = add(cups[cup].collateralE, amount_);
                 
-        collateralcoin.transferFrom(msg.sender, address(this), amount);
+        collateralcoin.transferFrom(msg.sender, address(this), amount_);
         uint amountallowed= sAmountforEcoin(amount_);
         stablecoin.vaultMint(msg.sender, amountallowed);
-        uint amountAdd = amountallowed/edc;
+        uint amountAdd = amountallowed;
         cups[cup].scm = add(cups[cup].scm, amountAdd);
         cups[cup].debt = add(cups[cup].debt, amountAdd);
         uint256 taxdebt = taxcalc(cup);
@@ -567,13 +567,11 @@ struct Cup {
     }
 /* 
     function to deposit XDC and mint stablecoin
-      require input amount without decimals for now
-    the function automatically adds 18 decimals to the value
+
      */
     function depositXDC(bytes32 cup, uint amount_) public payable note {
         require(safeCheck(cup)==true);
-        uint256 amount = amount_*edc;
-        require(msg.value==amount);
+        require(msg.value==amount_);
 
         cups[cup].collateralX = add(cups[cup].collateralX, amount_);
         
@@ -581,7 +579,7 @@ struct Cup {
     
         uint amountallowed= sAmountforXDC(amount_);
         stablecoin.vaultMint(msg.sender, amountallowed);
-        uint amountAdd = amountallowed/edc;
+        uint amountAdd = amountallowed;
         cups[cup].scm = add(cups[cup].scm, amountAdd);
         cups[cup].debt = add(cups[cup].debt, amountAdd);
         uint256 taxdebt = taxcalc(cup);
@@ -597,8 +595,8 @@ struct Cup {
         require(safeCheck(cup_)==true);
         require(cups[cup_].owner==msg.sender);
         require(USDX_Amt<=cups[cup_].debt);
-        uint256 amtTrans = USDX_Amt*edc;
-        uint256 amtAdd = amtTrans/edc;
+        uint256 amtTrans = USDX_Amt;
+        uint256 amtAdd = amtTrans;
         stablecoin.burnFrom(msg.sender, amtTrans );
         cups[cup_].debt = cups[cup_].debt - amtAdd;
 
@@ -622,8 +620,8 @@ struct Cup {
         uint tax = cups[cup_].tax;
         ttd =sub(ttd, tax );
 
-        stablecoin.burnFrom(msg.sender, debt*edc);
-        governcoin.transferFrom(msg.sender, pit, tax*edc);
+        stablecoin.burnFrom(msg.sender, debt);
+        governcoin.transferFrom(msg.sender, pit, tax);
         
         cups[cup_].tax= 0;
         cups[cup_].scm= 0;
@@ -652,7 +650,7 @@ struct Cup {
         require(cups[cup_].debt == 0);
         require(cups[cup_].tax == 0);
      
-        uint refamt = cups[cup_].collateralX*edc;
+        uint refamt = cups[cup_].collateralX;
         msg.sender.transfer(refamt);
         cups[cup_].collateralX =0;
     }
@@ -673,9 +671,9 @@ struct Cup {
     function mAmount(uint amount_ )  public view returns(uint){
         uint256 ecoinrate = checkEcoinRate();
     
-        uint256 value = mul(amount_, ecoinrate)*10**15;  
+        uint256 value = mul(div(amount_, tdc), ecoinrate)*10**15;  
         uint amountallowed= value/msr;
-        uint newamount= (amountallowed/edc);
+        uint newamount= (amountallowed);
             
             return(newamount);
     }
@@ -686,9 +684,9 @@ struct Cup {
     function mAmountX(uint amount_ )  public view returns(uint){
         uint256 xdcrate = checkXDCRate();
     
-        uint256 value = mul(amount_, xdcrate)*10**15;  
+        uint256 value = mul(div(amount_, edc), xdcrate)*10**15;  
         uint amountallowed= value/msr;
-        uint newamount= (amountallowed/edc);
+        uint newamount= (amountallowed);
             
             return(newamount);
     }
@@ -759,7 +757,7 @@ struct Cup {
 
     // Take on all of the debt
 
-        sincoin.mint(lqv, cups[cup].debt*edc);
+        sincoin.mint(lqv, cups[cup].debt);
         ttd = sub(ttd, cups[cup].tax);
         cups[cup].tax = 0;
         cups[cup].debt = 0;
@@ -769,8 +767,8 @@ struct Cup {
         uint256 amtX = cups[cup].collateralX;
         uint256 amtE = cups[cup].collateralE;
         
-        lqv.transfer(amtX*edc);
-        collateralcoin.transferFrom(address(this), lqv, amtE*edc);
+        lqv.transfer(amtX);
+        collateralcoin.transferFrom(address(this), lqv, amtE);
         cups[cup].collateralX = 0;
         cups[cup].collateralE = 0;
 

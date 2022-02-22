@@ -49,29 +49,17 @@ contract UDTap is UDThing {
     }
 
 
-    // Feed price (xusd per ecoin)
-    function x2e() public view returns (uint) {
-        uint256 noe = div(1*tdc*10*5, pfc.getEcoinPrice());
-        return(noe);
-    }
-
-    // Feed price (xusd per ecoin)
-    function x2x() public view returns (uint) {
-        uint256 noe = div(1*edc*10*5, pfc.getXDCPrice());
-        return(noe);
-    }
-
 
     // Boom price (xusd for ecoin) will return amount of xusd for input amount of ecoins
     function bidEcoin(uint ecoins_) public view returns (uint) {
-       uint256 noe = div(mul(ecoins_, pfc.getEcoinPrice()), 10**5);
+       uint256 noe = div(mul(div(ecoins_, tdc), pfc.getEcoinPrice()), 10**5);
         return noe*edc;
         
     }
 
      //  price (xusd for xdc) will return amount of xusd for input amount of xdc
     function bidXDC(uint xdc_) public view returns (uint) {
-       uint256 noe = div(mul(xdc_, pfc.getXDCPrice()), 10**5);
+       uint256 noe = div(mul(div(xdc_, edc), pfc.getXDCPrice()), 10**5);
         return noe*edc;
         
     }
@@ -79,7 +67,7 @@ contract UDTap is UDThing {
     // Bust price (ecoin for xusd)  will return amount of Ecoins for input amount of xusd
     function askForEcoin(uint xusd_) public view returns (uint) {  
         uint odi = div(10**5, pfc.getEcoinPrice());
-        uint256 noe = mul(odi, xusd_);
+        uint256 noe = mul(odi, div(xusd_, edc));
         uint nox = noe*tdc;
         return nox;
     }
@@ -87,7 +75,7 @@ contract UDTap is UDThing {
     // Bust price (xdc for xusd) will return amount of XDC for input amount of xusd
     function askForXDC(uint xusd_) public view returns (uint) {  
         uint odi = div(10**5, pfc.getXDCPrice());
-        uint256 noe = mul(odi, xusd_);
+        uint256 noe = mul(odi, div(xusd_, edc));
         uint nox = noe*edc;
         return nox;
     }
@@ -105,7 +93,7 @@ contract UDTap is UDThing {
      function flapE(uint ecoin_) internal {
         uint amtE = bidEcoin(ecoin_);
         stablecoin.transferFrom(address(this), msg.sender, amtE);
-        collateralcoin.transferFrom(msg.sender, address(this), ecoin_*tdc);
+        collateralcoin.transferFrom(msg.sender, address(this), ecoin_);
         heal();
     }
      
@@ -118,12 +106,30 @@ contract UDTap is UDThing {
     }
 
     // takes in xdc and give the surplus stablecoin
-     function flapX(uint xdc_) internal {
-        require(msg.value ==xdc_*edc);
+     function flapX(uint xdc_) internal  {
+        require(msg.value ==xdc_);
         uint amtE = bidXDC(xdc_);
 
         stablecoin.transferFrom(address(this), msg.sender, amtE);
         heal();
+    }
+
+
+    //take input of number of xusd user want to deposit and get ecoin
+    function bustEcoin(uint xusd_) public note {
+        flipE(xusd_);
+    }
+    
+    function bustXDC(uint xusd_) public note {
+        flipX(xusd_);
+    }
+
+     function boomEcoin(uint ecoin_) public note {
+        flapE(ecoin_);
+    }
+    
+    function boomXDC(uint xcd_) public note {
+        flapX(xcd_);
     }
 
 

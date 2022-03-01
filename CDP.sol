@@ -445,7 +445,9 @@ struct Cup {
          msr=175;
     }
 
-    
+    function setLQV(address lqv_) public auth {
+        lqv = lqv_;
+    }
     function SetTaxRate(uint256 rate) public auth  {
         //require(msg.sender==owner);
         taxrate=rate;
@@ -637,9 +639,9 @@ struct Cup {
         require(cups[cup_].debt == 0);
         require(cups[cup_].tax == 0);
 
-       
-        collateralcoin.transferFrom(address(this), msg.sender, cups[cup_].collateralE);
-        cups[cup_].collateralE =0;
+       uint amtref = cups[cup_].collateralE;
+        collateralcoin.transfer(msg.sender, amtref);
+        cups[cup_].collateralE = 0;
     }
 
     //function to transfer back the collateral if no debt is present

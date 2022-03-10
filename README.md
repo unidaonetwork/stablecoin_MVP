@@ -16,8 +16,7 @@ https://unidaonetwork.com
 Compile Stable Coin token smart contract (SC.sol) using Remix IDE with
 solidity 0.4.18 compiler.
 
-![](./doc_image/media/image1.png){width="6.289239938757655in"
-height="3.535682414698163in"}
+![](./doc_image/media/image1.png)
 
 *Image 1 : Compiling of SC.sol file.*
 
@@ -27,8 +26,7 @@ height="3.535682414698163in"}
 > contract named as UDToken1 with constructor parameter token name
 > ("XUSD").
 >
-> ![](./doc_image/media/image2.png){width="5.770505249343832in"
-> height="3.2440605861767278in"}
+> ![](./doc_image/media/image2.png)
 >
 > *Image 2: Deployment of Stable coin token contract*
 
@@ -51,8 +49,7 @@ height="3.535682414698163in"}
 
 Enter the following addresses carefully and deploy it.
 
-![](./doc_image/media/image3.png){width="6.5in"
-height="3.654166666666667in"}
+![](./doc_image/media/image3.png)
 
 *Image3: Deployment of CDP contract with the constructor parameters :
 CC\_, SC\_, and PF\_.*
@@ -63,8 +60,7 @@ CC\_, SC\_, and PF\_.*
 > (Stablecoin token) contract that you deployed in step 2 and set the
 > copied address as authority using setAuthority Function.
 >
-> ![](./doc_image/media/image4.png){width="6.5in"
-> height="3.654166666666667in"}
+> ![](./doc_image/media/image4.png)
 
 -   **Step 5**
 
@@ -75,11 +71,9 @@ CC\_, SC\_, and PF\_.*
 > Vault will be opened after you sign the transaction. You will get a
 > vault number that you can check with the cupNo() function.
 >
-> ![](./doc_image/media/image5.png){width="6.178803587051618in"
-> height="3.473596894138233in"}*Image:Opening of Vault.*
+> ![](./doc_image/media/image5.png)*Image:Opening of Vault.*
 >
-> ![](./doc_image/media/image6.png){width="6.5in"
-> height="3.654166666666667in"}
+> ![](./doc_image/media/image6.png)
 >
 > *Image: Check Cup (vault) number.*
 
@@ -94,13 +88,11 @@ CC\_, SC\_, and PF\_.*
 > Enter the same amount of XDC by scrolling up in the value input of the
 > transaction.
 >
-> ![](./doc_image/media/image7.png){width="6.5in"
-> height="3.654166666666667in"}
+> ![](./doc_image/media/image7.png)
 >
 > *Image: Setting value of the transaction.*
 >
-> ![](./doc_image/media/image8.png){width="6.5in"
-> height="3.654166666666667in"}
+> ![](./doc_image/media/image8.png)
 >
 > Image: Calling the depositXDC function with your cup number and the
 > amount of xdc. XDC amount you write should be same as the amount you
@@ -113,8 +105,8 @@ CC\_, SC\_, and PF\_.*
 > Add stablecoin token(decimal 18) in your xdc wallet with the UDToken1
 > contract address (step 2) and check your balance.
 
-![](./doc_image/media/image9.png){width="6.5in"
-height="3.654166666666667in"}
+![](./doc_image/media/image9.png)
+
 
 *Image10: XUSD Stablecoin balance in XDC wallet*
 
@@ -124,8 +116,7 @@ height="3.654166666666667in"}
 >
 > Enter the number of your cup in the cups function and call.
 >
-> ![](./doc_image/media/image10.png){width="6.5in"
-> height="3.654166666666667in"}
+> ![](./doc_image/media/image10.png)
 >
 > *Image11: Vault Details check.*
 >

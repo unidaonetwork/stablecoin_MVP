@@ -1,3 +1,2 @@
 
-[![Watch the video](https://us.123rf.com/450wm/4zevar/4zevar1509/4zevar150900035/44649773-play-button-icon.jpg?ver=6)](https://www.youtube.com/watch?v=EH37jmOPwxs)
-
+https://github.com/unidaonetwork/stablecoin_MVP/blob/master/demo%20(2).mp4

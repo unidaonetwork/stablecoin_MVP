@@ -45,7 +45,7 @@ solidity 0.4.18 compiler.
     (0xccd47446B3698Ee0f9E7E331f5653a206696B179)
 
 > (For more info of pricefeed visit
-> <https://bitbucket.org/krishnaproject/pricefeed/src/master>)
+> <https://github.com/unidaonetwork/stablecoin_MVP/tree/master/pricefeed>)
 
 Enter the following addresses carefully and deploy it.
 

@@ -1,7 +1,7 @@
 //Liquidation Vault
 
 pragma solidity ^0.4.18;
-import "./cdp.sol";
+import "./CDP.sol";
 
 contract UDTap is UDThing {
     UDToken     public  stablecoin;
@@ -48,7 +48,9 @@ contract UDTap is UDThing {
         sincoin.burn(wad);
     }
 
-
+    function collectXDC(uint256 amtxdc) public payable {
+        require(msg.value == amtxdc);
+    }
 
     // Boom price (xusd for ecoin) will return amount of xusd for input amount of ecoins
     function bidEcoin(uint ecoins_) public view returns (uint) {
@@ -84,8 +86,6 @@ contract UDTap is UDThing {
     // takes in the stablecoin and gives ecoin
      function flipE(uint xusd_) internal {
         stablecoin.transferFrom(msg.sender, address(this), xusd_);
-        uint amtE = askForEcoin(xusd_);
-        collateralcoin.transferFrom(address(this), msg.sender, amtE);
         heal();
     }
 
@@ -118,6 +118,9 @@ contract UDTap is UDThing {
     //take input of number of xusd user want to deposit and get ecoin
     function bustEcoin(uint xusd_) public note {
         flipE(xusd_);
+         uint amtE = askForEcoin(xusd_);
+         collateralcoin.transfer(msg.sender, amtE);
+
     }
     
     function bustXDC(uint xusd_) public note {

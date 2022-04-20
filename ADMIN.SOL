@@ -1,0 +1,29 @@
+pragma solidity ^0.4.18;
+
+import './LQV.sol';
+contract UDAdmin is UDAuth {
+        UDTub public udtub;
+        UDTap public udtap;
+    function UDAdmin(UDTub tubad, UDTap tabad) public {
+        udtub=tubad;
+        udtap=tabad;
+    }
+    function setStabilityFee(uint256 taxfee) public auth {
+        UDTub(udtub).SetTaxRate(taxfee);
+    }
+    function setOCR(uint256 ocrs) public auth {
+        UDTub(udtub).setOCR(ocrs);
+    }
+
+    function setMCR(uint256 mcrs) public auth {
+        UDTub(udtub).setMSR(mcrs);
+    }
+
+    function setLQV(UDTapI lqvs) public auth {
+        UDTub(udtub).setLQV(lqvs);
+    }
+
+
+
+    
+}
